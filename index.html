@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>聊天任务提取器</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+ --bg: #F5EDE8;
+ --card: #FFF5F0;
+ --accent: #C4908A;
+ --accent-light: #E8C4BF;
+ --accent-lighter: #F2DDD8;
+ --accent-dark: #A67570;
+ --text: #5C4742;
+ --text-light: #8C7370;
+ --text-lighter: #B09E9A;
+ --white: #FFFAF8;
+ --border: #E8D5CF;
+ --success: #9BB09A;
+ --success-light: #D4E2D3;
+ --warning: #C9B08A;
+ --warning-light: #EDE3D1;
+ --hover: #FAF0EB;
+ --shadow: rgba(166, 117, 112, 0.08);
+ --shadow-md: rgba(166, 117, 112, 0.12);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+min-height: 100vh;
+background: linear-gradient(160deg, var(--bg) 0%, var(--accent-lighter) 50%, var(--bg) 100%);
+font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+color: var(--text);
+padding: 20px;
+}
+
+::selection { background: var(--accent-light); color: var(--text); }
+
+@keyframes fadeIn {
+from { opacity: 0; transform: translateY(8px); }
+to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@keyframes slideDown {
+from { opacity: 0; max-height: 0; padding-top: 0; padding-bottom: 0; }
+to { opacity: 1; max-height: 500px; }
+}
+
+.container { max-width: 1100px; margin: 0 auto; }
+
+/* Header */
+.header {
+text-align: center;
+padding: 40px 20px 30px;
+animation: fadeIn 0.6s ease-out;
+}
+
+.header-badge {
+display: inline-block;
+padding: 6px 16px;
+background: var(--accent-lighter);
+border-radius: 20px;
+font-size: 12px;
+font-weight: 500;
+color: var(--accent-dark);
+margin-bottom: 16px;
+letter-spacing: 2px;
+}
+
+.header h1 {
+font-family: 'Noto Serif SC', 'Songti SC', Georgia, serif;
+font-size: clamp(28px, 5vw, 42px);
+font-weight: 700;
+color: var(--text);
+letter-spacing: 3px;
+margin-bottom: 10px;
+}
+
+.header p {
+font-size: 14px;
+color: var(--text-light);
+font-weight: 300;
+letter-spacing: 1px;
+}
+
+/* Settings Panel */
+.settings-panel {
+background: var(--white);
+border-radius: 16px;
+border: 1px solid var(--border);
+margin-bottom: 20px;
+box-shadow: 0 2px 12px var(--shadow);
+overflow: hidden;
+animation: fadeIn 0.6s ease-out 0.1s both;
+}
+
+.settings-toggle {
+width: 100%;
+padding: 16px 24px;
+display: flex;
+align-items: center;
+justify-content: space-between;
+background: none;
+border: none;
+cursor: pointer;
+font-family: inherit;
+font-size: 14px;
+font-weight: 500;
+color: var(--text);
+}
+
+.settings-toggle:hover { background: var(--hover); }
+
+.settings-toggle-left {
+display: flex;
+align-items: center;
+gap: 8px;
+}
+
+.settings-dot {
+width: 6px; height: 6px;
+border-radius: 50%;
+background: var(--success);
+display: inline-block;
+}
+
+.settings-arrow {
+transition: transform 0.3s ease;
+font-size: 12px;
+}
+
+.settings-arrow.open { transform: rotate(180deg); }
+
+.settings-body {
+padding: 0 24px 14px;
+display: flex;
+flex-direction: column;
+gap: 6px;
+animation: slideDown 0.3s ease-out;
+}
+
+.settings-body.hidden { display: none; }
+
+.setting-group {
+width: 100%;
+}
+
+@media (min-width: 601px) {
+.settings-body {
+flex-direction: row;
+gap: 8px;
+}
+.setting-group { flex: 1 1 0; min-width: 0; }
+}
+
+.setting-group label {
+display: block;
+font-size: 11px;
+font-weight: 500;
+color: var(--text-light);
+margin-bottom: 4px;
+letter-spacing: 1px;
+}
+
+.setting-group input,
+.setting-group select {
+width: 100%;
+padding: 8px 12px;
+border-radius: 8px;
+border: 1px solid var(--border);
+font-size: 13px;
+font-family: inherit;
+color: var(--text);
+background: var(--card);
+transition: border-color 0.2s;
+}
+
+.setting-group input:focus,
+.setting-group select:focus {
+outline: none;
+border-color: var(--accent);
+}
+
+/* Upload Area */
+.upload-area {
+background: var(--white);
+border-radius: 16px;
+border: 2px dashed var(--border);
+padding: 48px 24px;
+text-align: center;
+cursor: pointer;
+transition: all 0.3s ease;
+margin-bottom: 20px;
+box-shadow: 0 2px 12px var(--shadow);
+animation: fadeIn 0.6s ease-out 0.2s both;
+}
+
+.upload-area:hover,
+.upload-area.drag-over {
+border-color: var(--accent);
+background: var(--accent-lighter);
+}
+
+.upload-icon {
+width: 56px; height: 56px;
+border-radius: 50%;
+background: var(--accent-lighter);
+display: flex;
+align-items: center;
+justify-content: center;
+margin: 0 auto 16px;
+font-size: 24px;
+}
+
+.upload-area h3 {
+font-size: 15px;
+font-weight: 500;
+color: var(--text);
+margin-bottom: 4px;
+}
+
+.upload-area p {
+font-size: 12px;
+color: var(--text-lighter);
+}
+
+/* Extract Button */
+.extract-btn {
+width: 100%;
+padding: 16px;
+background: var(--accent);
+color: var(--white);
+border: none;
+border-radius: 12px;
+font-size: 15px;
+font-weight: 600;
+font-family: inherit;
+cursor: pointer;
+transition: all 0.3s ease;
+margin-bottom: 20px;
+box-shadow: 0 4px 16px var(--shadow-md);
+letter-spacing: 2px;
+animation: fadeIn 0.6s ease-out 0.3s both;
+}
+
+.extract-btn:hover { background: var(--accent-dark); }
+.extract-btn:disabled {
+background: var(--border);
+cursor: not-allowed;
+box-shadow: none;
+}
+
+.extract-btn.loading { background: var(--accent-light); }
+
+.spinner {
+display: inline-block;
+width: 16px; height: 16px;
+border: 2px solid var(--white);
+border-top-color: transparent;
+border-radius: 50%;
+animation: spin 0.8s linear infinite;
+vertical-align: middle;
+margin-right: 8px;
+}
+
+/* Error */
+.error-msg {
+background: #FFF0EE;
+border: 1px solid #E8A9A0;
+border-radius: 12px;
+padding: 14px 20px;
+margin-bottom: 20px;
+font-size: 13px;
+color: #9B534A;
+animation: fadeIn 0.3s ease-out;
+}
+
+.action-row {
+display: flex;
+gap: 10px;
+margin-bottom: 20px;
+flex-wrap: wrap;
+}
+
+.debug-panel {
+background: var(--white);
+border-radius: 16px;
+border: 1px solid var(--border);
+box-shadow: 0 2px 12px var(--shadow);
+overflow: hidden;
+margin-bottom: 20px;
+animation: fadeIn 0.4s ease-out;
+}
+
+.debug-header {
+padding: 18px 24px;
+display: flex;
+align-items: center;
+justify-content: space-between;
+border-bottom: 1px solid var(--border);
+gap: 10px;
+}
+
+.debug-header-actions {
+display: flex;
+align-items: center;
+gap: 8px;
+}
+
+.debug-title {
+font-family: 'Noto Serif SC', serif;
+font-size: 16px;
+font-weight: 600;
+color: var(--text);
+}
+
+.debug-body {
+padding: 16px 24px 24px;
+display: flex;
+flex-direction: column;
+gap: 12px;
+max-height: 360px;
+overflow-y: auto;
+}
+
+.debug-body.hidden {
+display: none;
+}
+
+.debug-toggle {
+background: transparent;
+border: 1px solid var(--border);
+border-radius: 8px;
+padding: 6px 10px;
+font-size: 12px;
+cursor: pointer;
+color: var(--text);
+}
+
+.debug-log {
+background: var(--card);
+border: 1px solid var(--border);
+border-radius: 10px;
+}
+
+.debug-log summary {
+list-style: none;
+cursor: pointer;
+padding: 12px;
+font-size: 12px;
+font-weight: 600;
+color: var(--accent-dark);
+}
+
+.debug-log summary::-webkit-details-marker {
+display: none;
+}
+
+.debug-log pre {
+padding: 0 12px 12px;
+white-space: pre-wrap;
+word-break: break-word;
+font-size: 12px;
+line-height: 1.5;
+color: var(--text);
+font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.checkbox-cell {
+width: 44px;
+text-align: center;
+}
+
+.checkbox-cell input {
+width: 16px;
+height: 16px;
+}
+
+/* Results Table */
+.results {
+background: var(--white);
+border-radius: 16px;
+border: 1px solid var(--border);
+box-shadow: 0 4px 20px var(--shadow);
+overflow: hidden;
+animation: fadeIn 0.5s ease-out;
+margin-bottom: 20px;
+}
+
+.results-header {
+padding: 18px 24px;
+display: flex;
+align-items: center;
+justify-content: space-between;
+border-bottom: 1px solid var(--border);
+flex-wrap: wrap;
+gap: 10px;
+}
+
+.results-title {
+font-family: 'Noto Serif SC', serif;
+font-size: 16px;
+font-weight: 600;
+color: var(--text);
+}
+
+.results-count {
+font-weight: 300;
+font-size: 13px;
+color: var(--text-light);
+}
+
+.results-actions {
+display: flex;
+gap: 8px;
+}
+
+.btn-small {
+padding: 6px 14px;
+border-radius: 8px;
+border: 1px solid var(--border);
+background: transparent;
+font-size: 12px;
+font-weight: 500;
+font-family: inherit;
+color: var(--text);
+cursor: pointer;
+transition: all 0.2s;
+}
+
+.btn-small:hover { background: var(--hover); }
+
+.btn-small.primary {
+background: var(--accent);
+color: var(--white);
+border-color: var(--accent);
+}
+
+.btn-small.primary:hover { background: var(--accent-dark); }
+
+.table-wrap { overflow-x: auto; }
+
+table {
+width: 100%;
+border-collapse: collapse;
+font-size: 13px;
+}
+
+thead tr { background: var(--accent-lighter); }
+
+th {
+padding: 10px 14px;
+text-align: left;
+font-weight: 500;
+font-size: 12px;
+color: var(--accent-dark);
+letter-spacing: 1px;
+white-space: nowrap;
+}
+
+tbody tr {
+border-bottom: 1px solid var(--border);
+transition: background 0.2s;
+}
+
+tbody tr:nth-child(even) { background: var(--hover); }
+tbody tr:hover { background: var(--accent-lighter); }
+
+td { padding: 10px 14px; vertical-align: top; }
+
+td .cell-text {
+cursor: text;
+display: block;
+min-height: 20px;
+padding: 2px 4px;
+border-radius: 4px;
+transition: background 0.2s;
+}
+
+td .cell-text:hover { background: var(--accent-lighter); }
+
+td input {
+width: 100%;
+padding: 4px 8px;
+border: 1px solid var(--accent);
+border-radius: 6px;
+font-size: 13px;
+font-family: inherit;
+color: var(--text);
+background: var(--white);
+}
+
+td input:focus { outline: none; }
+
+.status-select {
+padding: 4px 8px;
+border-radius: 6px;
+font-size: 12px;
+font-weight: 500;
+font-family: inherit;
+cursor: pointer;
+}
+
+.status-待办 {
+border: 1px solid var(--warning);
+background: var(--warning-light);
+color: var(--warning);
+}
+
+.status-已完成 {
+border: 1px solid var(--success);
+background: var(--success-light);
+color: var(--success);
+}
+
+.status-进行中 {
+border: 1px solid var(--accent);
+background: var(--accent-lighter);
+color: var(--accent);
+}
+
+.delete-btn {
+background: none;
+border: none;
+cursor: pointer;
+font-size: 14px;
+color: var(--text-lighter);
+padding: 4px;
+border-radius: 4px;
+transition: color 0.2s;
+}
+
+.delete-btn:hover { color: #C0706A; }
+
+.results-footer {
+padding: 12px 24px;
+border-top: 1px solid var(--border);
+font-size: 11px;
+color: var(--text-lighter);
+text-align: center;
+}
+
+.footer {
+text-align: center;
+padding: 32px 0 16px;
+font-size: 11px;
+color: var(--text-lighter);
+letter-spacing: 1px;
+}
+
+@media (max-width: 600px) {
+body { padding: 12px; }
+.header { padding: 24px 12px 20px; }
+.settings-body { flex-direction: column; }
+.upload-area { padding: 32px 16px; }
+.results-header { flex-direction: column; align-items: flex-start; }
+}
+</style>
+
+</head>
+<body>
+
+<div class="container">
+ <!-- Header -->
+ <div class="header">
+ <div class="header-badge">AI · 微信聊天记录</div>
+ <h1>聊天任务提取器</h1>
+ <p>上传聊天记录 · AI 自动提取任务 · 一键导出清单</p>
+ </div>
+
+ <!-- Settings -->
+
+ <div class="settings-panel">
+ <button class="settings-toggle" onclick="toggleSettings()">
+ <span class="settings-toggle-left">
+ <span>⚙</span>
+ <span>API 设置</span>
+ <span class="settings-dot" id="settingsDot" style="display:none"></span>
+ </span>
+ <span class="settings-arrow open" id="settingsArrow">▼</span>
+ </button>
+ <div class="settings-body" id="settingsBody">
+ <div class="setting-group" style="flex:1 1 240px">
+ <label>API Key</label>
+ <input type="password" id="apiKey" placeholder="输入你的 API Key" oninput="checkKey()">
+ </div>
+ <div class="setting-group" style="flex:1 1 240px">
+ <label>API URL</label>
+ <input type="text" id="apiUrl" value="https://dragoncode.codes">
+ </div>
+ <div class="setting-group" style="flex:0 1 180px; min-width:140px">
+ <label>模型预设</label>
+ <select id="modelPreset" onchange="applyModelPreset()">
+ <option value="claude-opus-4-6" selected>Claude Opus 4.6</option>
+ <option value="claude-sonnet-4-6">Claude Sonnet 4.6</option>
+ <option value="gpt-5.4">GPT 5.4</option>
+ <option value="custom">手动输入</option>
+ </select>
+ </div>
+ <div class="setting-group" style="flex:1 1 240px">
+ <label>模型 ID</label>
+ <input type="text" id="modelInput" value="claude-opus-4-6" placeholder="例如 claude-opus-4-6">
+ </div>
+ </div>
+ </div>
+
+ <!-- Upload -->
+
+ <div class="upload-area" id="uploadArea"
+ ondragover="event.preventDefault(); this.classList.add('drag-over')"
+ ondragleave="this.classList.remove('drag-over')"
+ ondrop="handleDrop(event)"
+ onclick="document.getElementById('fileInput').click()">
+ <input type="file" id="fileInput" accept=".txt,.csv,.json" style="display:none" onchange="handleFileSelect(event)">
+ <div class="upload-icon" id="uploadIcon">☁</div>
+ <h3 id="uploadTitle">拖拽聊天记录文件到这里</h3>
+ <p id="uploadSubtitle">支持 .txt / .csv / .json 格式</p>
+ </div>
+
+ <!-- Extract Button -->
+
+<div class="action-row">
+<button class="extract-btn" id="extractBtn" disabled onclick="extractTasks()" style="margin-bottom:0">提取任务</button>
+<button class="btn-small" onclick="loadTestText()">加载测试文本</button>
+<button class="btn-small" onclick="clearDebugLogs()">清空调试</button>
+</div>
+
+ <!-- Error -->
+
+ <div class="error-msg" id="errorMsg" style="display:none"></div>
+
+ <!-- Debug -->
+
+ <div class="debug-panel">
+ <div class="debug-header">
+ <span class="debug-title">调试信息</span>
+ <div class="debug-header-actions">
+ <span class="results-count" id="debugCount">0 条</span>
+ <button class="debug-toggle" onclick="toggleDebugPanel()" id="debugToggle">展开</button>
+ </div>
+ </div>
+ <div class="debug-body hidden" id="debugBody">
+ <div class="results-footer" style="padding:0;border:none;text-align:left">这里会显示每次请求的原始返回、清洗结果和错误信息。</div>
+ </div>
+ </div>
+
+ <!-- Results -->
+
+ <div class="results" id="results" style="display:none">
+ <div class="results-header">
+ <span class="results-title">提取结果 <span class="results-count" id="taskCount"></span></span>
+ <div class="results-actions">
+ <button class="btn-small" onclick="toggleSelectAll(true)">全选</button>
+ <button class="btn-small" onclick="toggleSelectAll(false)">清空选择</button>
+ <button class="btn-small" onclick="addTask()">+ 添加</button>
+ <button class="btn-small" onclick="exportSelectedToReminders()">导出到提醒事项</button>
+ <button class="btn-small primary" onclick="exportCSV()">导出 CSV</button>
+ </div>
+ </div>
+ <div class="table-wrap">
+ <table>
+ <thead>
+ <tr>
+ <th class="checkbox-cell"><input type="checkbox" id="selectAllTasks" onchange="toggleSelectAll(this.checked)"></th>
+ <th>日期</th>
+ <th>说话人</th>
+ <th>消息摘要</th>
+ <th>任务内容</th>
+ <th>截止时间</th>
+ <th>状态</th>
+ <th style="width:50px"></th>
+ </tr>
+ </thead>
+ <tbody id="taskTableBody"></tbody>
+ </table>
+ </div>
+ <div class="results-footer">支持部分选择导出 · 点击单元格即可编辑 · 可导出到 CSV 或 macOS 提醒事项</div>
+ </div>
+
+ <div class="footer">聊天任务提取器 · Powered by Claude AI</div>
+</div>
+
+<script>
+let fileContent = '';
+let tasks = [];
+let settingsOpen = true;
+let debugLogs = [];
+let debugOpen = false;
+const CHUNK_SIZE = 1800;
+const CHUNK_OVERLAP = 200;
+const REQUEST_DELAY_MS = 800;
+const TEST_TEXT = `4.10 张三：明天下午把合同发给李总，别忘了同步最新报价。
+4.10 李四：好的，我今天先整理附件，明天 3 点前发出。
+4.11 王敏：周五前把会议纪要发到群里，每个人补充自己的待办。
+4.11 张三：下周一之前确认活动场地和预算。`;
+
+const TASK_JSON_TEMPLATE = `[
+  {
+    "date": "消息出现的日期，如 4.10",
+    "speaker": "发言人代号，如 A 或 B",
+    "summary": "消息摘要，简短概括这条消息在说什么",
+    "task": "提取出的具体任务或待办事项",
+    "deadline": "截止时间（如果有的话，没有就写未指定）",
+    "status": "待办"
+  }
+]`;
+
+const SYSTEM_PROMPT = `你是一个聊天记录任务提取助手。用户会上传微信聊天记录，你需要从中提取出所有任务、工作安排、待办事项、重要时间节点。
+
+你必须严格输出 JSON 数组，字段结构必须和下面模板完全一致：
+${TASK_JSON_TEMPLATE}
+
+硬性要求：
+1. 只能输出 JSON 数组本身，禁止输出解释、标题、备注、前后缀、markdown 代码块
+2. 每一项都必须包含 date、speaker、summary、task、deadline、status 六个字段
+3. 所有 key 必须使用双引号
+4. 所有字符串 value 必须是合法 JSON 字符串
+5. 如果没有任何任务，返回 []
+6. 只提取包含任务、工作安排、要求、待办的消息，普通寒暄不要提取
+7. date 字段填写消息出现的实际日期
+8. 如果一条消息包含多个任务，拆成多行
+9. status 默认填 "待办"
+10. deadline 没写明时填 "未指定"
+11. speaker 字段不要出现真实姓名，请匿名化成 A、B、C 这类代号`;
+
+function toggleSettings() {
+ settingsOpen = !settingsOpen;
+ document.getElementById('settingsBody').classList.toggle('hidden', !settingsOpen);
+ document.getElementById('settingsArrow').classList.toggle('open', settingsOpen);
+}
+
+function checkKey() {
+ const dot = document.getElementById('settingsDot');
+ dot.style.display = document.getElementById('apiKey').value ? 'inline-block' : 'none';
+}
+
+function handleDrop(e) {
+ e.preventDefault();
+ e.currentTarget.classList.remove('drag-over');
+ const f = e.dataTransfer.files[0];
+ if (f) loadFile(f);
+}
+
+function handleFileSelect(e) {
+ const f = e.target.files[0];
+ if (f) loadFile(f);
+}
+
+function loadFile(f) {
+ const reader = new FileReader();
+ reader.onload = (e) => {
+ applyLoadedContent(f.name, e.target.result, (f.size / 1024).toFixed(1) + ' KB · 点击更换文件');
+ };
+ reader.onerror = () => showError('文件读取失败，请重试');
+ reader.readAsText(f);
+}
+
+function applyLoadedContent(name, content, subtitle) {
+ fileContent = content;
+ document.getElementById('uploadIcon').textContent = '📄';
+ document.getElementById('uploadTitle').textContent = name;
+ document.getElementById('uploadSubtitle').textContent = subtitle;
+ document.getElementById('extractBtn').disabled = false;
+ document.getElementById('errorMsg').style.display = 'none';
+ document.getElementById('results').style.display = 'none';
+ tasks = [];
+}
+
+function loadTestText() {
+ applyLoadedContent('内置测试文本.txt', TEST_TEXT, (TEST_TEXT.length / 1024).toFixed(1) + ' KB · 内置测试样例');
+ addDebugLog('测试', '已加载内置测试文本');
+}
+
+function showError(msg) {
+ const el = document.getElementById('errorMsg');
+ el.textContent = msg;
+ el.style.display = 'block';
+ addDebugLog('错误', msg);
+}
+
+async function extractTasks() {
+ const apiKey = document.getElementById('apiKey').value.trim();
+ const apiUrl = document.getElementById('apiUrl').value.trim().replace(/\/+$/, '');
+ const model = document.getElementById('modelInput').value.trim();
+
+ if (!apiKey) { showError('请先填写 API Key'); toggleSettings(); settingsOpen = true; return; }
+ if (!model) { showError('请先填写模型 ID'); toggleSettings(); settingsOpen = true; return; }
+ if (!fileContent) { showError('请先上传聊天记录文件'); return; }
+
+ const btn = document.getElementById('extractBtn');
+ btn.disabled = true;
+ btn.classList.add('loading');
+ btn.innerHTML = '<span class="spinner"></span> 正在准备分段...';
+ document.getElementById('errorMsg').style.display = 'none';
+ document.getElementById('results').style.display = 'none';
+ clearDebugLogs();
+
+ try {
+ const chunks = splitTextIntoChunks(fileContent, CHUNK_SIZE, CHUNK_OVERLAP);
+ const collected = [];
+ addDebugLog('开始', `总长度: ${fileContent.length} 字符\n分段数: ${chunks.length}\n分段大小: ${CHUNK_SIZE}\n重叠: ${CHUNK_OVERLAP}`);
+
+ for (let i = 0; i < chunks.length; i++) {
+ const chunk = chunks[i];
+ btn.innerHTML = `<span class="spinner"></span> 正在提取第 ${i + 1}/${chunks.length} 段...`;
+ addDebugLog(`第 ${i + 1} 段请求`, chunk);
+
+ const response = await fetch('/api/messages', {
+ method: 'POST',
+ headers: {
+ 'Content-Type': 'application/json',
+ },
+ body: JSON.stringify({
+ apiUrl: apiUrl,
+ apiKey: apiKey,
+ model: model,
+ max_tokens: 2048,
+ system: SYSTEM_PROMPT,
+ messages: [{
+ role: 'user',
+ content: `以下是第 ${i + 1} 段微信聊天记录，请提取其中的任务和工作安排。只提取当前片段里明确出现的信息。
+
+请严格按照这个 JSON 模板输出，不要输出任何额外文字：
+${TASK_JSON_TEMPLATE}
+
+如果当前片段没有任务，请返回 []
+
+speaker 请使用 A、B、C 这类代号，不要输出真实姓名。
+
+聊天记录如下：
+\n${chunk}`
+ }]
+ })
+ });
+
+ if (!response.ok) {
+ const errData = await response.json().catch(() => ({}));
+ addDebugLog(`第 ${i + 1} 段错误响应`, JSON.stringify(errData, null, 2) || '(空)');
+ throw new Error(`第 ${i + 1} 段失败：` + (errData.error?.message || 'API 请求失败 (' + response.status + ')'));
+ }
+
+ const data = await response.json();
+ addDebugLog(`第 ${i + 1} 段原始响应`, JSON.stringify(data, null, 2));
+ const text = extractResponseText(data);
+ addDebugLog(`第 ${i + 1} 段提取文本`, text);
+ const clean = text.replace(/```json|```/g, '').trim();
+ addDebugLog(`第 ${i + 1} 段清洗后文本`, clean);
+ const parsed = parseTaskArray(clean);
+ addDebugLog(`第 ${i + 1} 段解析结果`, JSON.stringify(parsed, null, 2));
+
+ if (!Array.isArray(parsed)) throw new Error(`第 ${i + 1} 段返回格式不正确`);
+ collected.push(...parsed);
+
+ if (i < chunks.length - 1) {
+ await sleep(REQUEST_DELAY_MS);
+ }
+ }
+
+ tasks = anonymizeSpeakers(dedupeTasks(collected)).map((t, i) => ({
+ id: i,
+ selected: true,
+ date: t.date || '',
+ speaker: t.speaker || '',
+ summary: t.summary || '',
+ task: t.task || '',
+ deadline: t.deadline || '未指定',
+ status: t.status || '待办'
+ }));
+
+ renderTable();
+ document.getElementById('results').style.display = 'block';
+ } catch (err) {
+ showError(err.message || '解析失败，请检查 API 设置和文件内容');
+ } finally {
+ btn.disabled = false;
+ btn.classList.remove('loading');
+ btn.textContent = '提取任务';
+ }
+}
+
+function renderTable() {
+ const tbody = document.getElementById('taskTableBody');
+ document.getElementById('taskCount').textContent = '共 ' + tasks.length + ' 条任务';
+
+ tbody.innerHTML = tasks.map((t, idx) => `
+ <tr style="animation: fadeIn 0.3s ease-out ${idx * 0.03}s both">
+ <td class="checkbox-cell"><input type="checkbox" ${t.selected ? 'checked' : ''} onchange="toggleTaskSelection(${t.id}, this.checked)"></td>
+ <td><span class="cell-text" onclick="editCell(${t.id}, 'date', this)">${esc(t.date) || '—'}</span></td>
+ <td><span class="cell-text" onclick="editCell(${t.id}, 'speaker', this)">${esc(t.speaker) || '—'}</span></td>
+ <td><span class="cell-text" onclick="editCell(${t.id}, 'summary', this)">${esc(t.summary) || '—'}</span></td>
+ <td><span class="cell-text" onclick="editCell(${t.id}, 'task', this)">${esc(t.task) || '—'}</span></td>
+ <td><span class="cell-text" onclick="editCell(${t.id}, 'deadline', this)">${esc(t.deadline) || '—'}</span></td>
+ <td>
+ <select class="status-select status-${t.status}" onchange="updateStatus(${t.id}, this.value); this.className='status-select status-'+this.value">
+ <option value="待办" ${t.status === '待办' ? 'selected' : ''}>待办</option>
+ <option value="进行中" ${t.status === '进行中' ? 'selected' : ''}>进行中</option>
+ <option value="已完成" ${t.status === '已完成' ? 'selected' : ''}>已完成</option>
+ </select>
+ </td>
+ <td style="text-align:center"><button class="delete-btn" onclick="deleteTask(${t.id})">✕</button></td>
+ </tr>
+ `).join('');
+ updateSelectAllState();
+}
+
+function applyModelPreset() {
+ const preset = document.getElementById('modelPreset').value;
+ if (preset !== 'custom') {
+ document.getElementById('modelInput').value = preset;
+ }
+}
+
+function toggleDebugPanel() {
+ debugOpen = !debugOpen;
+ document.getElementById('debugBody').classList.toggle('hidden', !debugOpen);
+ document.getElementById('debugToggle').textContent = debugOpen ? '折叠' : '展开';
+}
+
+function addDebugLog(title, content) {
+ debugLogs.unshift({
+ title,
+ content: String(content || '')
+ });
+ renderDebugLogs();
+}
+
+function clearDebugLogs() {
+ debugLogs = [];
+ renderDebugLogs();
+}
+
+function renderDebugLogs() {
+ const body = document.getElementById('debugBody');
+ const count = document.getElementById('debugCount');
+ count.textContent = `${debugLogs.length} 条`;
+ if (!debugLogs.length) {
+ body.innerHTML = '<div class="results-footer" style="padding:0;border:none;text-align:left">这里会显示每次请求的原始返回、清洗结果和错误信息。</div>';
+ return;
+ }
+ body.innerHTML = debugLogs.map(log => `
+ <details class="debug-log">
+ <summary>${esc(log.title)}</summary>
+ <pre>${esc(log.content)}</pre>
+ </details>
+ `).join('');
+}
+
+function splitTextIntoChunks(text, chunkSize, overlap) {
+ const normalized = String(text || '').replace(/\r\n/g, '\n');
+ const lines = normalized.split('\n');
+ const chunks = [];
+ let current = '';
+
+ for (const line of lines) {
+ const next = current ? current + '\n' + line : line;
+ if (next.length <= chunkSize) {
+ current = next;
+ continue;
+ }
+ if (current) {
+ chunks.push(current);
+ const tail = current.slice(Math.max(0, current.length - overlap));
+ current = tail ? tail + '\n' + line : line;
+ } else {
+ chunks.push(line.slice(0, chunkSize));
+ current = line.slice(chunkSize - overlap);
+ }
+ }
+
+ if (current.trim()) chunks.push(current);
+ return chunks.filter(chunk => chunk.trim());
+}
+
+function dedupeTasks(items) {
+ const seen = new Set();
+ const result = [];
+ for (const item of items) {
+ const normalized = {
+ date: String(item?.date || '').trim(),
+ speaker: String(item?.speaker || '').trim(),
+ summary: String(item?.summary || '').trim(),
+ task: String(item?.task || '').trim(),
+ deadline: String(item?.deadline || '未指定').trim(),
+ status: String(item?.status || '待办').trim() || '待办'
+ };
+ const key = [normalized.date, normalized.speaker, normalized.task, normalized.deadline].join('||');
+ if (!normalized.task || seen.has(key)) continue;
+ seen.add(key);
+ result.push(normalized);
+ }
+ return result;
+}
+
+function anonymizeSpeakers(items) {
+ const aliasMap = new Map();
+ let aliasIndex = 0;
+ return items.map(item => {
+ const original = String(item.speaker || '').trim();
+ if (!original) return item;
+ if (!aliasMap.has(original)) {
+ aliasMap.set(original, indexToAlias(aliasIndex));
+ aliasIndex += 1;
+ }
+ return { ...item, speaker: aliasMap.get(original) };
+ });
+}
+
+function indexToAlias(index) {
+ let n = index;
+ let result = '';
+ do {
+ result = String.fromCharCode(65 + (n % 26)) + result;
+ n = Math.floor(n / 26) - 1;
+ } while (n >= 0);
+ return result;
+}
+
+function toggleTaskSelection(id, checked) {
+ const task = tasks.find(t => t.id === id);
+ if (task) task.selected = checked;
+ updateSelectAllState();
+}
+
+function toggleSelectAll(checked) {
+ tasks.forEach(task => { task.selected = checked; });
+ renderTable();
+}
+
+function updateSelectAllState() {
+ const checkbox = document.getElementById('selectAllTasks');
+ if (!checkbox) return;
+ const selectedCount = tasks.filter(t => t.selected).length;
+ checkbox.checked = tasks.length > 0 && selectedCount === tasks.length;
+ checkbox.indeterminate = selectedCount > 0 && selectedCount < tasks.length;
+}
+
+async function exportSelectedToReminders() {
+ const selectedTasks = tasks.filter(t => t.selected);
+ if (!selectedTasks.length) {
+ showError('请先选择至少一条任务');
+ return;
+ }
+ const listName = window.prompt('导出到哪个提醒事项列表？', '聊天任务提取器') || '聊天任务提取器';
+ try {
+ const response = await fetch('/api/reminders', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({
+ listName,
+ items: selectedTasks.map(task => ({
+ title: task.task,
+ notes: `日期：${task.date || '未指定'}\n说话人：${task.speaker || '未指定'}\n摘要：${task.summary || ''}\n截止时间：${task.deadline || '未指定'}\n状态：${task.status || '待办'}`,
+ deadline: task.deadline || '',
+ date: task.date || ''
+ }))
+ })
+ });
+ const data = await response.json().catch(() => ({}));
+ if (!response.ok) throw new Error(data.error?.message || '导出失败');
+ addDebugLog('提醒事项导出', JSON.stringify(data, null, 2));
+ alert(`已导出 ${data.exported || selectedTasks.length} 条到提醒事项“${listName}”`);
+ } catch (err) {
+ showError(err.message || '导出到提醒事项失败');
+ }
+}
+
+function sleep(ms) {
+ return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function parseTaskArray(text) {
+ const direct = tryParseJson(text);
+ if (Array.isArray(direct)) return direct;
+
+ const arraySlice = extractJsonArray(text);
+ const parsedSlice = tryParseJson(arraySlice);
+ if (Array.isArray(parsedSlice)) return parsedSlice;
+
+ const repaired = repairJsonArray(arraySlice);
+ addDebugLog('JSON 修复后文本', repaired);
+ const parsedRepaired = tryParseJson(repaired);
+ if (Array.isArray(parsedRepaired)) return parsedRepaired;
+
+ throw new Error('模型返回的 JSON 格式不合法，请重试该文件或继续缩小分段');
+}
+
+function tryParseJson(text) {
+ try {
+ return JSON.parse(text);
+ } catch {
+ return null;
+ }
+}
+
+function extractJsonArray(text) {
+ const start = text.indexOf('[');
+ const end = text.lastIndexOf(']');
+ if (start !== -1 && end !== -1 && end > start) {
+ return text.slice(start, end + 1);
+ }
+ return text;
+}
+
+function repairJsonArray(text) {
+ const normalized = text
+ .replace(/,\s*([}\]])/g, '$1')
+ .replace(/}\s*{/g, '},{')
+ .replace(/\]\s*\[/g, ',')
+ .replace(/[\u201C\u201D]/g, '"')
+ .replace(/[\u2018\u2019]/g, "'");
+ return escapeInnerQuotes(normalized);
+}
+
+function escapeInnerQuotes(text) {
+ let result = '';
+ let inString = false;
+ let escaped = false;
+
+ for (let i = 0; i < text.length; i++) {
+ const ch = text[i];
+
+ if (escaped) {
+ result += ch;
+ escaped = false;
+ continue;
+ }
+
+ if (ch === '\\') {
+ result += ch;
+ escaped = true;
+ continue;
+ }
+
+ if (ch === '"') {
+ if (!inString) {
+ inString = true;
+ result += ch;
+ continue;
+ }
+
+ const next = nextNonWhitespaceChar(text, i + 1);
+ if (next === ',' || next === '}' || next === ']' || next === ':') {
+ inString = false;
+ result += ch;
+ } else {
+ result += '\\"';
+ }
+ continue;
+ }
+
+ result += ch;
+}
+
+ return result;
+}
+
+function nextNonWhitespaceChar(text, start) {
+ for (let i = start; i < text.length; i++) {
+ const ch = text[i];
+ if (!/\s/.test(ch)) return ch;
+ }
+ return '';
+}
+
+function extractResponseText(data) {
+ if (Array.isArray(data?.content)) {
+ return data.content.map(item => item?.type === 'text' ? item.text : '').filter(Boolean).join('\n');
+ }
+ if (Array.isArray(data?.choices)) {
+ return data.choices.map(choice => {
+ const msg = choice?.message;
+ if (typeof msg?.content === 'string') return msg.content;
+ if (Array.isArray(msg?.content)) {
+ return msg.content.map(item => typeof item?.text === 'string' ? item.text : '').filter(Boolean).join('\n');
+ }
+ return '';
+ }).filter(Boolean).join('\n');
+ }
+ if (typeof data?.output_text === 'string') return data.output_text;
+ throw new Error('返回格式不支持，请检查接口协议或模型');
+}
+
+function esc(s) {
+ if (!s) return '';
+ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function editCell(id, field, el) {
+ const task = tasks.find(t => t.id === id);
+ if (!task) return;
+ const val = task[field] || '';
+ const input = document.createElement('input');
+ input.value = val;
+ input.onblur = () => {
+ task[field] = input.value;
+ el.textContent = input.value || '—';
+ el.style.display = 'block';
+ };
+ input.onkeydown = (e) => { if (e.key === 'Enter') input.blur(); };
+ el.style.display = 'none';
+ el.parentNode.insertBefore(input, el);
+ input.focus();
+}
+
+function updateStatus(id, value) {
+ const task = tasks.find(t => t.id === id);
+ if (task) task.status = value;
+}
+
+function deleteTask(id) {
+ tasks = tasks.filter(t => t.id !== id);
+ renderTable();
+}
+
+function addTask() {
+ const newId = tasks.length > 0 ? Math.max(...tasks.map(t => t.id)) + 1 : 0;
+ tasks.push({ id: newId, selected: true, date: '', speaker: '', summary: '', task: '', deadline: '未指定', status: '待办' });
+ renderTable();
+}
+
+function exportCSV() {
+ const headers = ['日期', '说话人', '消息摘要', '任务内容', '截止时间', '状态'];
+ const rows = tasks.map(t =>
+ [t.date, t.speaker, t.summary, t.task, t.deadline, t.status]
+ .map(v => '"' + (v || '').replace(/"/g, '""') + '"')
+ .join(',')
+ );
+ const csv = '\uFEFF' + [headers.join(','), ...rows].join('\n');
+ const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+ const url = URL.createObjectURL(blob);
+ const a = document.createElement('a');
+ a.href = url;
+ a.download = '任务清单_' + new Date().toLocaleDateString('zh-CN') + '.csv';
+ a.click();
+ URL.revokeObjectURL(url);
+}
+</script>
+
+</body>
+</html>
