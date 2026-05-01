@@ -162,17 +162,3 @@ http://127.0.0.1:8765/
 
 这时可以看页面里的调试信息。
 
-## 开源建议
-
-如果你要上传到 GitHub，建议至少上传这些文件：
-
-- `index.html`
-- `server.py`
-- `start.command`
-- `README.md`
-
-可选再补：
-
-- `LICENSE`
-- `.gitignore`
-
