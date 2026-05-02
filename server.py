@@ -11,8 +11,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 
-DESKTOP = Path("/Users/wuyiliu/Desktop")
-HTML_FILE = DESKTOP / "新建网页.html"
+PROJECT_DIR = Path(__file__).resolve().parent
+HTML_FILE = PROJECT_DIR / "index.html"
 HOST = "127.0.0.1"
 PORT = 8765
 

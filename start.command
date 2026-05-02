@@ -1,3 +1,4 @@
 #!/bin/zsh
-cd /Users/wuyiliu/Desktop
-python3 '/Users/wuyiliu/Desktop/聊天任务提取器-本地启动.py'
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR"
+python3 "$SCRIPT_DIR/server.py"
